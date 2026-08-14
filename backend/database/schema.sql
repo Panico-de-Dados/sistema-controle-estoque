@@ -68,6 +68,194 @@ alter table public.movimentacoes drop constraint if exists movimentacoes_produto
 alter table public.movimentacoes add constraint movimentacoes_produto_id_fkey
   foreign key (produto_id) references public.produtos(id) on delete restrict;
 
+-- Atualiza bancos criados por versoes anteriores sem remover dados.
+-- PostgreSQL nao oferece ADD CONSTRAINT IF NOT EXISTS, portanto cada
+-- restricao e conferida no catalogo antes de ser adicionada.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'familias_codigo_check'
+      and conrelid = 'public.familias'::regclass
+  ) then
+    alter table public.familias
+      add constraint familias_codigo_check check (codigo ~ '^[0-9]{3}$') not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'familias_nome_check'
+      and conrelid = 'public.familias'::regclass
+  ) then
+    alter table public.familias
+      add constraint familias_nome_check
+      check (length(btrim(nome)) between 1 and 120) not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'tipos_codigo_check'
+      and conrelid = 'public.tipos'::regclass
+  ) then
+    alter table public.tipos
+      add constraint tipos_codigo_check check (codigo ~ '^[0-9]{3}$') not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'tipos_nome_check'
+      and conrelid = 'public.tipos'::regclass
+  ) then
+    alter table public.tipos
+      add constraint tipos_nome_check
+      check (length(btrim(nome)) between 1 and 120) not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'tipos_id_familia_id_key'
+      and conrelid = 'public.tipos'::regclass
+  ) then
+    alter table public.tipos
+      add constraint tipos_id_familia_id_key unique (id, familia_id);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'produtos_familia_codigo_check'
+      and conrelid = 'public.produtos'::regclass
+  ) then
+    alter table public.produtos
+      add constraint produtos_familia_codigo_check
+      check (familia_codigo ~ '^[0-9]{3}$') not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'produtos_tipo_codigo_check'
+      and conrelid = 'public.produtos'::regclass
+  ) then
+    alter table public.produtos
+      add constraint produtos_tipo_codigo_check
+      check (tipo_codigo ~ '^[0-9]{3}$') not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'produtos_produto_codigo_check'
+      and conrelid = 'public.produtos'::regclass
+  ) then
+    alter table public.produtos
+      add constraint produtos_produto_codigo_check
+      check (produto_codigo ~ '^[0-9]{4}$') not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'produtos_nome_check'
+      and conrelid = 'public.produtos'::regclass
+  ) then
+    alter table public.produtos
+      add constraint produtos_nome_check
+      check (length(btrim(nome)) between 1 and 160) not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'produtos_codigo_completo_key'
+      and conrelid = 'public.produtos'::regclass
+  ) then
+    alter table public.produtos
+      add constraint produtos_codigo_completo_key unique (codigo_completo);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'produtos_tipo_da_familia_fk'
+      and conrelid = 'public.produtos'::regclass
+  ) then
+    alter table public.produtos
+      add constraint produtos_tipo_da_familia_fk
+      foreign key (tipo_id, familia_id)
+      references public.tipos(id, familia_id) on delete restrict not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'movimentacoes_responsavel_check'
+      and conrelid = 'public.movimentacoes'::regclass
+  ) then
+    alter table public.movimentacoes
+      add constraint movimentacoes_responsavel_check
+      check (length(btrim(responsavel)) between 1 and 120) not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'movimentacoes_saldo_anterior_check'
+      and conrelid = 'public.movimentacoes'::regclass
+  ) then
+    alter table public.movimentacoes
+      add constraint movimentacoes_saldo_anterior_check
+      check (saldo_anterior >= 0) not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'movimentacoes_saldo_novo_check'
+      and conrelid = 'public.movimentacoes'::regclass
+  ) then
+    alter table public.movimentacoes
+      add constraint movimentacoes_saldo_novo_check
+      check (saldo_novo >= 0) not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'movimentacao_saida_com_motivo'
+      and conrelid = 'public.movimentacoes'::regclass
+  ) then
+    alter table public.movimentacoes
+      add constraint movimentacao_saida_com_motivo check (
+        tipo = 'entrada' or nullif(btrim(motivo), '') is not null
+      ) not valid;
+  end if;
+end;
+$$;
+
+-- Garante que a exclusao de uma familia seja bloqueada quando houver tipos.
+do $$
+declare v_definicao text;
+begin
+  select pg_get_constraintdef(oid) into v_definicao
+  from pg_constraint
+  where conname = 'tipos_familia_id_fkey'
+    and conrelid = 'public.tipos'::regclass;
+
+  if v_definicao is null or v_definicao not like '%ON DELETE RESTRICT%' then
+    alter table public.tipos drop constraint if exists tipos_familia_id_fkey;
+    alter table public.tipos add constraint tipos_familia_id_fkey
+      foreign key (familia_id) references public.familias(id)
+      on delete restrict not valid;
+  end if;
+end;
+$$;
+
+alter table public.familias validate constraint familias_codigo_check;
+alter table public.familias validate constraint familias_nome_check;
+alter table public.tipos validate constraint tipos_codigo_check;
+alter table public.tipos validate constraint tipos_nome_check;
+alter table public.tipos validate constraint tipos_familia_id_fkey;
+alter table public.produtos validate constraint produtos_familia_codigo_check;
+alter table public.produtos validate constraint produtos_tipo_codigo_check;
+alter table public.produtos validate constraint produtos_produto_codigo_check;
+alter table public.produtos validate constraint produtos_nome_check;
+alter table public.produtos validate constraint produtos_tipo_da_familia_fk;
+alter table public.movimentacoes validate constraint movimentacoes_responsavel_check;
+alter table public.movimentacoes validate constraint movimentacoes_saldo_anterior_check;
+alter table public.movimentacoes validate constraint movimentacoes_saldo_novo_check;
+alter table public.movimentacoes validate constraint movimentacao_saida_com_motivo;
+
 create index if not exists idx_produtos_codigo_completo on public.produtos (codigo_completo);
 create index if not exists idx_produtos_nome
   on public.produtos using gin (to_tsvector('portuguese', nome));
