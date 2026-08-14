@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1C2128">
+<title>Produtos — Arquivo Morto</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tailwind-config.js"></script>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased selection:bg-brand-100">
+<div id="layout-shell"></div>
+
+<template id="tpl-content">
+  <div class="mx-auto max-w-7xl">
+    <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-brand-600">Catálogo</p>
+        <h2 class="text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">Produtos</h2>
+        <p class="mt-1 text-sm text-slate-500">Gerencie itens, saldos, localizações e QR Codes.</p>
+      </div>
+      <button id="btn-novo-produto" class="inline-flex items-center gap-2 rounded-xl bg-brand-400 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-glow transition duration-200 hover:-translate-y-0.5 hover:bg-brand-500 active:scale-95">＋ Novo produto</button>
+    </div>
+
+    <div class="mb-6 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-soft md:p-5">
+      <div class="flex-1 min-w-[180px]">
+        <label class="mb-1.5 block text-xs font-semibold text-slate-500">Buscar por nome ou código</label>
+        <input id="filtro-busca" placeholder="Ex: 001.001.0042 ou Caixa fiscal" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-100">
+      </div>
+      <div>
+        <label class="mb-1.5 block text-xs font-semibold text-slate-500">Família</label>
+        <select id="filtro-familia" class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"><option value="">Todas</option></select>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-xs font-semibold text-slate-500">Tipo</label>
+        <select id="filtro-tipo" class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"><option value="">Todos</option></select>
+      </div>
+      <label class="flex items-center gap-2.5 pb-2 text-sm font-medium text-slate-600">
+        <input type="checkbox" id="filtro-baixo-estoque" class="h-4 w-4 rounded border-slate-300 text-brand-500 focus:ring-brand-400"> Só estoque baixo
+      </label>
+      <button id="btn-filtrar" class="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:scale-95">Filtrar</button>
+    </div>
+
+    <div class="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white p-4 shadow-soft md:p-6">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-100 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <th class="py-2 pr-3">Código</th>
+            <th class="py-2 pr-3">Produto</th>
+            <th class="py-2 pr-3">Localização</th>
+            <th class="py-2 pr-3">Saldo</th>
+            <th class="py-2 pr-3">Mínimo</th>
+            <th class="py-2 pr-3">QR</th>
+            <th class="py-2 pr-3"></th>
+          </tr>
+        </thead>
+        <tbody id="tabela-produtos"></tbody>
+      </table>
+      <p id="msg-vazio-produtos" class="hidden py-12 text-center text-sm text-slate-400">Nenhum produto encontrado.</p>
+    </div>
+  </div>
+</template>
+
+<!-- Modal de cadastro/edição -->
+<div id="modal-produto" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm">
+  <div class="max-h-[90vh] w-full max-w-lg animate-pop overflow-y-auto rounded-3xl border border-white/20 bg-white p-5 shadow-2xl md:p-7">
+    <div class="flex items-center justify-between mb-4">
+      <div><p class="text-xs font-bold uppercase tracking-wider text-brand-600">Cadastro</p><h3 id="modal-titulo" class="text-xl font-bold text-slate-950">Novo Produto</h3></div>
+      <button id="btn-fechar-modal" class="grid h-9 w-9 place-items-center rounded-xl bg-slate-100 text-xl leading-none text-slate-500 transition hover:bg-slate-200 hover:text-slate-900">&times;</button>
+    </div>
+    <form id="form-produto" class="flex flex-col gap-3">
+      <input type="hidden" id="produto-id">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="mb-1 block text-xs font-semibold text-slate-500">Família</label>
+          <select required id="produto-familia" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-4 focus:ring-brand-100"><option value="">Selecione…</option></select>
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-semibold text-slate-500">Tipo</label>
+          <select required id="produto-tipo" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:opacity-60" disabled><option value="">Selecione a família</option></select>
+        </div>
+      </div>
+
+      <div id="preview-codigo" class="hidden flex items-center justify-between rounded-xl bg-slate-950 px-3.5 py-3 text-sm text-white shadow-lg">
+        <span>Próximo código:</span>
+        <span id="preview-codigo-valor" class="inline-flex rotate-[-0.6deg] rounded-md border-2 border-brand-400 px-2.5 py-1 font-mono text-xs font-bold tracking-[0.14em] text-brand-400"></span>
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-semibold text-slate-500">Nome</label>
+        <input required id="produto-nome" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-100">
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-semibold text-slate-500">Descrição</label>
+        <textarea id="produto-descricao" rows="2" class="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-100"></textarea>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-semibold text-slate-500">Localização (ex: Estante B, Prateleira 3)</label>
+        <input id="produto-localizacao" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-100">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="mb-1 block text-xs font-semibold text-slate-500">Quantidade inicial</label>
+          <input required type="number" min="0" step="1" id="produto-quantidade" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-4 focus:ring-brand-100 disabled:opacity-60" value="0">
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-semibold text-slate-500">Estoque mínimo</label>
+          <input required type="number" min="0" step="1" id="produto-estoque-minimo" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-4 focus:ring-brand-100" value="0">
+        </div>
+      </div>
+      <button type="submit" class="mt-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:scale-[.98] disabled:opacity-50">Salvar produto</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de QR Code -->
+<div id="modal-qr" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm">
+  <div class="w-full max-w-xs animate-pop rounded-3xl border border-white/20 bg-white p-7 text-center shadow-2xl">
+    <p id="qr-codigo-texto" class="mb-4 inline-flex rotate-[-0.6deg] rounded-md border-2 border-slate-900 px-2.5 py-1 font-mono text-xs font-bold tracking-[0.14em]"></p>
+    <div id="qr-canvas-container" class="flex justify-center mb-4"></div>
+    <p id="qr-nome-produto" class="text-sm font-medium mb-4"></p>
+    <button id="btn-fechar-qr" class="w-full rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800 active:scale-95">Fechar</button>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/layout.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+<script src="js/produtos.js"></script>
+</body>
+</html>

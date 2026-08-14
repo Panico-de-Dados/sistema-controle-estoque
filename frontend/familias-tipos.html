@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1C2128">
+<title>Famílias & Tipos — Arquivo Morto</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tailwind-config.js"></script>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased selection:bg-brand-100">
+<div id="layout-shell"></div>
+
+<template id="tpl-content">
+  <div class="mx-auto max-w-6xl">
+    <div class="mb-8">
+      <p class="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-brand-600">Organização</p>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">Famílias e tipos</h2>
+      <p class="mt-1 text-sm text-slate-500">Estruture a classificação utilizada nos códigos FFF.TTT.PPPP.</p>
+    </div>
+    <div class="grid gap-6 md:grid-cols-2">
+
+    <!-- FAMÍLIAS -->
+    <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft md:p-6">
+      <div class="mb-5 flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sky-50 font-mono text-xs font-bold text-sky-600">FFF</span><div><h3 class="font-bold text-slate-950">Famílias</h3><p class="text-xs text-slate-500">Grupos base, ex: Documentos</p></div></div>
+
+      <form id="form-familia" class="flex flex-col gap-3 mb-5">
+        <input type="hidden" id="familia-id">
+        <input required id="familia-nome" placeholder="Nome da família" class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-100">
+        <input id="familia-descricao" placeholder="Descrição (opcional)" class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-100">
+        <div class="flex gap-2">
+          <button type="submit" class="flex-1 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 active:scale-95">Salvar família</button>
+          <button type="button" id="btn-cancelar-familia" class="hidden rounded-xl px-3 text-sm font-medium text-slate-500 transition hover:bg-slate-100">Cancelar</button>
+        </div>
+      </form>
+
+      <div id="lista-familias" class="flex flex-col gap-2"></div>
+    </section>
+
+    <!-- TIPOS -->
+    <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft md:p-6">
+      <div class="mb-5 flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 font-mono text-xs font-bold text-violet-600">TTT</span><div><h3 class="font-bold text-slate-950">Tipos</h3><p class="text-xs text-slate-500">Subgrupos de cada família</p></div></div>
+
+      <form id="form-tipo" class="flex flex-col gap-3 mb-5">
+        <input type="hidden" id="tipo-id">
+        <select required id="tipo-familia" class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100">
+          <option value="">Selecione a família…</option>
+        </select>
+        <input required id="tipo-nome" placeholder="Nome do tipo" class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-100">
+        <input id="tipo-descricao" placeholder="Descrição (opcional)" class="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-100">
+        <div class="flex gap-2">
+          <button type="submit" class="flex-1 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 active:scale-95">Salvar tipo</button>
+          <button type="button" id="btn-cancelar-tipo" class="hidden rounded-xl px-3 text-sm font-medium text-slate-500 transition hover:bg-slate-100">Cancelar</button>
+        </div>
+      </form>
+
+      <div class="mb-2">
+        <select id="filtro-tipo-familia" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-4 focus:ring-brand-100">
+          <option value="">Todas as famílias</option>
+        </select>
+      </div>
+      <div id="lista-tipos" class="flex flex-col gap-2"></div>
+    </section>
+    </div>
+  </div>
+</template>
+
+<script src="js/api.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/familias.js"></script>
+</body>
+</html>

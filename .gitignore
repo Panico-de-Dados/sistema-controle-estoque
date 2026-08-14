@@ -1,0 +1,13 @@
+node_modules/
+frontend/vendor/
+backend/.env
+backend/.env.*
+!backend/.env.example
+.dev.vars
+.wrangler/
+.vercel/
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

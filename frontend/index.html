@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel — Arquivo Morto</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1C2128">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tailwind-config.js"></script>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased selection:bg-brand-100">
+<div id="layout-shell"></div>
+
+<template id="tpl-content">
+  <div class="mx-auto max-w-7xl">
+    <div class="mb-8 flex items-center justify-between gap-4">
+      <div>
+        <p class="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-brand-600">Visão geral</p>
+        <h2 class="text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">Painel de controle</h2>
+        <p class="mt-1 text-sm text-slate-500">Acompanhe o estoque e as movimentações do arquivo morto.</p>
+      </div>
+      <a href="scanner.html" class="hidden items-center gap-2 rounded-xl bg-brand-400 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-glow transition duration-200 hover:-translate-y-0.5 hover:bg-brand-500 active:scale-95 md:inline-flex">Escanear QR Code <span aria-hidden="true">→</span></a>
+    </div>
+
+    <div class="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
+      <div class="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-brand-400/50">
+        <div class="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-600">▦</div>
+        <p class="text-xs font-semibold text-slate-500">Itens cadastrados</p>
+        <p id="stat-total" class="mt-1 text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">—</p>
+      </div>
+      <div class="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-brand-400/50">
+        <div class="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">⬡</div>
+        <p class="text-xs font-semibold text-slate-500">Unidades em estoque</p>
+        <p id="stat-quantidade" class="mt-1 text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">—</p>
+      </div>
+      <div class="group rounded-2xl border border-red-200 bg-gradient-to-br from-white to-red-50 p-5 shadow-soft transition duration-300 hover:-translate-y-1">
+        <div class="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-600">!</div>
+        <p class="text-xs font-semibold text-red-600">Estoque baixo</p>
+        <p id="stat-baixo" class="mt-1 text-2xl font-bold tracking-tight text-red-600 md:text-3xl">—</p>
+      </div>
+      <div class="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-brand-400/50">
+        <div class="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600">↻</div>
+        <p class="text-xs font-semibold text-slate-500">Movimentações · 7 dias</p>
+        <p id="stat-mov" class="mt-1 text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">—</p>
+      </div>
+    </div>
+
+    <div class="mb-8 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
+      <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4 md:px-6">
+        <div><h3 class="font-bold text-slate-900">Estoque crítico</h3><p class="text-xs text-slate-500">Itens abaixo do limite configurado</p></div>
+        <span class="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-600">Atenção</span>
+      </div>
+      <div class="overflow-x-auto px-5 pb-4 md:px-6">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-100 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <th class="py-3 pr-4">Código</th><th class="py-3 pr-4">Produto</th><th class="py-3 pr-4">Localização</th><th class="py-3 pr-4">Saldo</th><th class="py-3 pr-4">Mínimo</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-baixo-estoque"></tbody>
+        </table>
+        <p id="msg-vazio-baixo" class="hidden py-10 text-center text-sm text-slate-400">Tudo certo — nenhum item abaixo do estoque mínimo.</p>
+      </div>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
+      <div class="border-b border-slate-100 px-5 py-4 md:px-6"><h3 class="font-bold text-slate-900">Últimas movimentações</h3><p class="text-xs text-slate-500">Atividade recente registrada no sistema</p></div>
+      <div class="overflow-x-auto px-5 pb-4 md:px-6">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-100 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <th class="py-2 pr-3">Data/Hora</th>
+              <th class="py-2 pr-3">Tipo</th>
+              <th class="py-2 pr-3">Código</th>
+              <th class="py-2 pr-3">Produto</th>
+              <th class="py-2 pr-3">Qtd.</th>
+              <th class="py-2 pr-3">Responsável</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-ultimas-mov"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script src="js/api.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

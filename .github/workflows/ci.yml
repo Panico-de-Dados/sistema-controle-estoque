@@ -1,0 +1,36 @@
+name: Validar projeto
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci --prefix backend
+
+      - name: Validar backend
+        run: npm run check --prefix backend
+
+      - name: Preparar frontend
+        run: node scripts/prepare-frontend.js
+
+      - name: Validar deploy
+        run: node scripts/check-deploy.js
