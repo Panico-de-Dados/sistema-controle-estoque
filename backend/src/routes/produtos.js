@@ -4,7 +4,9 @@ const supabase = require('../config/supabase');
 const { pad, validarCodigoCompleto, lerInteiro, textoObrigatorio, textoOpcional } = require('../utils/codigo');
 const { dadoUnico, responderErroBanco } = require('../utils/resposta');
 
-const SELECT_COMPLETO = '*, familias(nome), tipos(nome)';
+// O banco pode manter uma FK legada em tipo_id alem da FK composta atual.
+// Informar a constraint remove a ambiguidade do relacionamento no PostgREST.
+const SELECT_COMPLETO = '*, familias(nome), tipos!produtos_tipo_da_familia_fk(nome)';
 
 // GET /api/produtos -> lista com filtros opcionais
 // query params: q (busca por nome ou código), familia_id, tipo_id, baixo_estoque=true

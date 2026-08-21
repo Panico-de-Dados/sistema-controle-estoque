@@ -92,8 +92,6 @@ http://localhost:3000
 
 > O Express entrega a API e o frontend pelo mesmo endereço. Não use Live Server para abrir os arquivos HTML.
 
-No Windows, também é possível executar o arquivo `START.bat` na raiz. Ele instala as dependências quando necessário e inicia a aplicação.
-
 ## Configuração detalhada
 
 ### 1. Criar e preparar o banco no Supabase
@@ -417,7 +415,6 @@ Sistema-de-Controle-de-Estoque-main/
 │   └── check-deploy.js             Valida proxy, autenticação e artefatos
 ├── PROPOSTA.md                     Requisitos originais do trabalho
 ├── README.md                       Documentação do projeto
-└── START.bat                       Inicialização rápida no Windows
 ```
 
 ## API REST
